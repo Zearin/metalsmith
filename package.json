@@ -22,16 +22,14 @@
   "dependencies": {
     "chalk": "^2.4.1",
     "clone": "^2.1.1",
-    "co-fs-extra": "^1.2.1",
     "commander": "^2.6.0",
+    "fs-extra": "^6.0.1",
     "gray-matter": "^4.0.1",
     "has-generators": "^1.0.1",
     "is-utf8": "~0.2.0",
     "recursive-readdir": "^2.1.0",
     "rimraf": "^2.2.8",
     "stat-mode": "^0.2.0",
-    "thunkify": "^2.1.2",
-    "unyield": "0.0.1",
     "ware": "^1.2.0",
     "win-fork": "^1.1.1"
   },

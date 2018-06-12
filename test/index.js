@@ -1,7 +1,8 @@
 
+const util = require('util')
 const assert = require('assert')
 const equal = require('assert-dir-equal')
-const exec = require('child_process').exec
+const exec = util.promisify(require('child_process').exec)
 const fs = require('fs')
 const Metalsmith = require('..')
 const Mode = require('stat-mode')
@@ -20,15 +21,16 @@ describe('Metalsmith', function(){
     assert.equal(typeof Metalsmith, 'function')
   })
 
-  it('should not require the `new` keyword', function(){
+  it.skip('should not require the `new` keyword', function(){
     const m = Metalsmith('test/tmp')
     assert(m instanceof Metalsmith)
   })
 
   it('should error without a working directory', function(){
-    assert.throws(function(){
-      Metalsmith()
-    }, /You must pass a working directory path\./)
+    assert.throws(
+      function(){ Metalsmith() },
+      /You must pass a working directory path\./
+    )
   })
 
   it('should use `./src` as a default source directory', function(){
@@ -82,9 +84,9 @@ describe('Metalsmith', function(){
 
     it('should error on non-string', function(){
       const m = Metalsmith('test/tmp')
-      assert.throws(function(){
-        m.directory(0)
-      })
+      assert.throws(
+        function(){ m.directory(0)}
+      )
     })
   })
 
@@ -230,170 +232,138 @@ describe('Metalsmith', function(){
   })
 
   describe('#read', function(){
-    it('should read from a source directory', function(done){
+    it('should read from a source directory', async function(){
       const m = Metalsmith(fixture('read'))
       const stats = fs.statSync(fixture('read/src/index.md'))
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.deepEqual(files, {
-          'index.md': {
-            title: 'A Title',
-            contents: Buffer.from('body'),
-            mode: stats.mode.toString(8).slice(-4),
-            stats: stats
-          }
-        })
-        done()
+      const files = await m.read()
+      assert.deepEqual(files, {
+        'index.md': {
+          title: 'A Title',
+          contents: Buffer.from('body'),
+          mode: stats.mode.toString(8).slice(-4),
+          stats: stats
+        }
       })
     })
 
-    it('should traverse a symbolic link to a directory', function(done){
+    it('should traverse a symbolic link to a directory', async function(){
       // symbolic links are not really a thing on Windows
       if (process.platform === 'win32') { this.skip() }
       const m = Metalsmith(fixture('read-symbolic-link'))
       const stats = fs.statSync(fixture('read-symbolic-link/src/dir/index.md'))
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.deepEqual(files, {
-          'dir/index.md': {
-            title: 'A Title',
-            contents: Buffer.from('body'),
-            mode: stats.mode.toString(8).slice(-4),
-            stats: stats
-          }
-        })
-        done()
+      const files = await m.read()
+      assert.deepEqual(files, {
+        'dir/index.md': {
+          title: 'A Title',
+          contents: Buffer.from('body'),
+          mode: stats.mode.toString(8).slice(-4),
+          stats: stats
+        }
       })
     })
 
-    it('should read from a provided directory', function(done){
+    it('should read from a provided directory', async function(){
       const m = Metalsmith(fixture('read-dir'))
       const stats = fs.statSync(fixture('read-dir/dir/index.md'))
       const dir = fixture('read-dir/dir')
-      m.read(dir, function(err, files){
-        if (err) return done(err)
-        assert.deepEqual(files, {
-          'index.md': {
-            title: 'A Title',
-            contents: Buffer.from('body'),
-            mode: stats.mode.toString(8).slice(-4),
-            stats: stats
-          }
-        })
-        done()
+      const files = await m.read(dir)
+      assert.deepEqual(files, {
+        'index.md': {
+          title: 'A Title',
+          contents: Buffer.from('body'),
+          mode: stats.mode.toString(8).slice(-4),
+          stats: stats
+        }
       })
     })
 
-    it('should preserve an existing file mode', function(done){
+    it('should preserve an existing file mode', async function(){
       const m = Metalsmith(fixture('read-mode'))
       const stats = fs.statSync(fixture('read-mode/src/bin'))
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.deepEqual(files, {
-          'bin': {
-            contents: Buffer.from('echo test'),
-            mode: stats.mode.toString(8).slice(-4),
-            stats: stats
-          }
-        })
-        done()
+      const files = await m.read()
+      assert.deepEqual(files, {
+        'bin': {
+          contents: Buffer.from('echo test'),
+          mode: stats.mode.toString(8).slice(-4),
+          stats: stats
+        }
       })
     })
 
-    it('should expose the stats property in each file metadata', function(done){
+    it('should expose the stats property in each file metadata', async function(){
       const m = Metalsmith(fixture('expose-stat'))
-      m.read(function(err, files) {
-        const file = files['index.md']
-        assert(file.stats instanceof fs.Stats)
-        done()
-      })
+      const files = await m.read()
+      const file = files['index.md']
+      assert(file.stats instanceof fs.Stats)
     })
 
-    it('should not parse frontmatter if frontmatter is false', function(done){
+    it('should not parse frontmatter if frontmatter is false', async function(){
       const m = Metalsmith(fixture('read-frontmatter'))
       m.frontmatter(false)
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.equal(files['index.md'].thing, undefined)
-        done()
-      })
+      const files = await m.read()
+      assert.equal(files['index.md'].thing, undefined)
     })
 
-    it('should still read all when concurrency is set', function(done){
+    it('should still read all when concurrency is set', async function(){
       const m = Metalsmith('test/fixtures/concurrency')
       m.concurrency(3)
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.equal(Object.keys(files).length, 10)
-        done()
-      })
+      const files = await m.read()
+      assert.equal(Object.keys(files).length, 10)
     })
 
-    it('should ignore the files specified in ignores', function(done){
+    it('should ignore the files specified in ignores', async function(){
       const stats = fs.statSync(path.join(__dirname, 'fixtures/basic/src/index.md'))
       const m = Metalsmith('test/fixtures/basic')
       m.ignore('nested')
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.deepEqual(files, {
-          'index.md': {
-            date: new Date('2013-12-02'),
-            title: 'A Title',
-            contents: Buffer.from('body'),
-            mode: stats.mode.toString(8).slice(-4),
-            stats: stats
-          }
-        })
-        done()
+      const files = await m.read()
+      assert.deepEqual(files, {
+        'index.md': {
+          date: new Date('2013-12-02'),
+          title: 'A Title',
+          contents: Buffer.from('body'),
+          mode: stats.mode.toString(8).slice(-4),
+          stats: stats
+        }
       })
     })
 
 
-    it('should ignore the files specified in function-based ignores', function(done){
+    it('should ignore the files specified in function-based ignores', async function(){
       const stats = fs.statSync(path.join(__dirname, 'fixtures/basic/src/index.md'))
       const m = Metalsmith('test/fixtures/basic')
       m.ignore(function(filepath, stats) {
         return stats.isDirectory() && path.basename(filepath) === 'nested'
       })
-      m.read(function(err, files){
-        if (err) return done(err)
-        assert.deepEqual(files, {
-          'index.md': {
-            date: new Date('2013-12-02'),
-            title: 'A Title',
-            contents: Buffer.from('body'),
-            mode: stats.mode.toString(8).slice(-4),
-            stats: stats
-          }
-        })
-        done()
+      const files = await m.read()
+      assert.deepEqual(files, {
+        'index.md': {
+          date: new Date('2013-12-02'),
+          title: 'A Title',
+          contents: Buffer.from('body'),
+          mode: stats.mode.toString(8).slice(-4),
+          stats: stats
+        }
       })
     })
   })
 
   describe('#write', function(){
-    it('should write to a destination directory', function(done){
+    it('should write to a destination directory', async function(){
       const m = Metalsmith(fixture('write'))
       const files = { 'index.md': { contents: Buffer.from('body') }}
-      m.write(files, function(err){
-        if (err) return done(err)
-        equal(fixture('write/build'), fixture('write/expected'))
-        done()
-      })
+      await m.write(files)
+      equal(fixture('write/build'), fixture('write/expected'))
     })
 
-    it('should write to a provided directory', function(done){
+    it('should write to a provided directory', async function(){
       const m = Metalsmith(fixture('write-dir'))
       const files = { 'index.md': { contents: Buffer.from('body') }}
       const dir = fixture('write-dir/out')
-      m.write(files, dir, function(err){
-        if (err) return done(err)
-        equal(fixture('write-dir/out'), fixture('write-dir/expected'))
-        done()
-      })
+      await m.write(files, dir)
+      equal(fixture('write-dir/out'), fixture('write-dir/expected'))
     })
 
-    it('should chmod an optional mode from file metadata', function(done){
+    it('should chmod an optional mode from file metadata', async function(){
       // chmod is not really working on windows https://github.com/nodejs/node-v0.x-archive/issues/4812#issue-11211650
       if (process.platform === 'win32') { this.skip() }
       const m = Metalsmith(fixture('write-mode'))
@@ -404,37 +374,37 @@ describe('Metalsmith', function(){
         }
       }
 
-      m.write(files, function(err){
-        const stats = fs.statSync(fixture('write-mode/build/bin'))
-        const mode = Mode(stats).toOctal()
-        assert.equal(mode, '0777')
-        done()
-      })
+      await m.write(files)
+      const stats = fs.statSync(fixture('write-mode/build/bin'))
+      const mode = Mode(stats).toOctal()
+      assert.equal(mode, '0777')
     })
 
-    it('should still write all when concurrency is set', function(done){
+    it('should still write all when concurrency is set', async function(){
       const m = Metalsmith('test/fixtures/concurrency')
-      m.read(function(err, files){
-        if (err) return done(err)
-        m.write(files, function(err){
-          if (err) return done(err)
-          equal('test/fixtures/concurrency/build', 'test/fixtures/concurrency/expected')
-          done()
-        })
-      })
+      const files = await m.read()
+      await m.write(files)
+      equal('test/fixtures/concurrency/build', 'test/fixtures/concurrency/expected')
     })
   })
 
   describe('#run', function(){
-    it('should apply a plugin', function(done){
+    it('should apply a plugin', async function(){
       const m = Metalsmith('test/tmp')
-      m.use(plugin)
-      m.run({ one: 'one' }, function(err, files, metalsmith){
+      m.use(function plugin(files, metalsmith, done){
         assert.equal(files.one, 'one')
-        assert.equal(files.two, 'two')
+        assert.equal(m, metalsmith)
+        assert.equal(typeof done, 'function')
+        files.two = 'two'
         done()
       })
+      const files = await m.run({ one: 'one' })
+      assert.equal(files.one, 'one')
+      assert.equal(files.two, 'two')
+    })
 
+    it('should run with a provided plugin', async function(){
+      const m = Metalsmith('test/tmp')
       function plugin(files, metalsmith, done){
         assert.equal(files.one, 'one')
         assert.equal(m, metalsmith)
@@ -442,226 +412,188 @@ describe('Metalsmith', function(){
         files.two = 'two'
         done()
       }
+      const files = await m.run({ one: 'one' }, [plugin])
+      assert.equal(files.one, 'one')
+      assert.equal(files.two, 'two')
     })
 
-    it('should run with a provided plugin', function(done){
+    it('should support synchronous plugins', async function(){
       const m = Metalsmith('test/tmp')
-      m.run({ one: 'one' }, [plugin], function(err, files, metalsmith){
-        assert.equal(files.one, 'one')
-        assert.equal(files.two, 'two')
-        done()
-      })
-
-      function plugin(files, metalsmith, done){
-        assert.equal(files.one, 'one')
-        assert.equal(m, metalsmith)
-        assert.equal(typeof done, 'function')
-        files.two = 'two'
-        done()
-      }
-    })
-
-    it('should support synchronous plugins', function(done){
-      const m = Metalsmith('test/tmp')
-      m.use(plugin)
-      m.run({ one: 'one' }, function(err, files, metalsmith){
-        assert.equal(files.one, 'one')
-        assert.equal(files.two, 'two')
-        done()
-      })
-
-      function plugin(files, metalsmith){
+      m.use(function plugin(files, metalsmith){
         assert.equal(files.one, 'one')
         assert.equal(m, metalsmith)
         files.two = 'two'
-      }
+      })
+      const files = await m.run({ one: 'one' })
+      assert.equal(files.one, 'one')
+      assert.equal(files.two, 'two')
     })
   })
 
   describe('#process', function(){
-    it('should return files object with no plugins', function(done){
-      Metalsmith(fixture('basic'))
-        .process(function(err, files){
-          if (err) return done(err)
-          assert.equal(typeof files, 'object')
-          assert.equal(typeof files['index.md'], 'object')
-          assert.equal(files['index.md'].title, 'A Title')
-          assert.equal(typeof files[path.join('nested', 'index.md')], 'object')
-          done()
-        })
+    it('should return files object with no plugins', async function(){
+      const m = Metalsmith(fixture('basic'))
+      const files = await m.process()
+      assert.equal(typeof files, 'object')
+      assert.equal(typeof files['index.md'], 'object')
+      assert.equal(files['index.md'].title, 'A Title')
+      assert.equal(typeof files[path.join('nested', 'index.md')], 'object')
     })
-    it('should apply a plugin', function(done){
-      Metalsmith(fixture('basic-plugin'))
-        .use(function(files, metalsmith, done){
-          Object.keys(files).forEach(function(file){
-            const data = files[file]
-            data.contents = Buffer.from(data.title)
-          })
-          done()
+    
+    it('should apply a plugin', async function(){
+      const m = Metalsmith(fixture('basic-plugin'))
+      m.use(function(files, metalsmith, done){
+        Object.keys(files).forEach(function(file){
+          const data = files[file]
+          data.contents = Buffer.from(data.title)
         })
-        .process(function(err, files){
-          if (err) return done(err)
-          assert.equal(typeof files, 'object')
-          assert.equal(Object.keys(files).length, 2)
-          assert.equal(typeof files['one.md'], 'object')
-          assert.equal(files['one.md'].title, 'one')
-          assert.equal(files['one.md'].contents.toString('utf8'), 'one')
-          assert.equal(typeof files['two.md'], 'object')
-          assert.equal(files['two.md'].title, 'two')
-          assert.equal(files['two.md'].contents.toString('utf8'), 'two')
-          done()
-        })
+        done()
+      })
+      const files = await m.process()
+      assert.equal(typeof files, 'object')
+      assert.equal(Object.keys(files).length, 2)
+      assert.equal(typeof files['one.md'], 'object')
+      assert.equal(files['one.md'].title, 'one')
+      assert.equal(files['one.md'].contents.toString('utf8'), 'one')
+      assert.equal(typeof files['two.md'], 'object')
+      assert.equal(files['two.md'].title, 'two')
+      assert.equal(files['two.md'].contents.toString('utf8'), 'two')
     })
   })
 
   describe('#build', function(){
-    it('should do a basic copy with no plugins', function(done){
-      Metalsmith(fixture('basic'))
-        .build(function(err, files){
-          if (err) return done(err)
-          assert.equal(typeof files, 'object')
-          equal(fixture('basic/build'), fixture('basic/expected'))
-          done()
-        })
+    it('should do a basic copy with no plugins', async function(){
+      const m = Metalsmith(fixture('basic'))
+      const files = await m.build()
+      assert.equal(typeof files, 'object')
+      equal(fixture('basic/build'), fixture('basic/expected'))
     })
 
-    it('should preserve binary files', function(done){
-      Metalsmith(fixture('basic-images'))
-        .build(function(err, files){
-          if (err) return done(err)
-          assert.equal(typeof files, 'object')
-          equal(fixture('basic-images/build'), fixture('basic-images/expected'))
-          done()
-        })
+    it('should preserve binary files', async function(){
+      const m = Metalsmith(fixture('basic-images'))
+      const files = await m.build()
+      assert.equal(typeof files, 'object')
+      equal(fixture('basic-images/build'), fixture('basic-images/expected'))
     })
 
-    it('should apply a plugin', function(done){
-      Metalsmith(fixture('basic-plugin'))
-        .use(function(files, metalsmith, done){
-          Object.keys(files).forEach(function(file){
-            const data = files[file]
-            data.contents = Buffer.from(data.title)
-          })
-          done()
+    it('should apply a plugin', async function(){
+      const plugin = function(files, metalsmith, done){
+        Object.keys(files).forEach(function(file){
+          const data = files[file]
+          data.contents = Buffer.from(data.title)
         })
-        .build(function(err){
-          if (err) return done(err)
-          equal(fixture('basic-plugin/build'), fixture('basic-plugin/expected'))
-          done()
-        })
+        done()
+      }
+      const m = Metalsmith(fixture('basic-plugin')).use(plugin)
+      await m.build()
+      equal(fixture('basic-plugin/build'), fixture('basic-plugin/expected'))
     })
 
-    it('should remove an existing destination directory', function(done){
+    it('should remove an existing destination directory', async function(){
       const m = Metalsmith(fixture('build'))
       rm(fixture('build/build'))
       fs.mkdirSync(fixture('build/build'))
-      exec('touch test/fixtures/build/build/empty.md', function(err){
-        if (err) return done(err)
-        m.build(function(err){
-          if (err) return done(err)
-          equal(fixture('build/build'), fixture('build/expected'))
-          done()
-        })
-      })
+      try       { await exec('touch test/fixtures/build/build/empty.md') }
+      catch (e) { throw e }
+      await m.build()
+      equal(fixture('build/build'), fixture('build/expected'))
     })
 
-    it('should not remove existing destination directory if clean is false', function(done){
+    it('should not remove existing destination directory if clean is false', async function(){
       const dir = path.join('test', 'fixtures', 'build-noclean', 'build')
-      const cmd = process.platform === 'win32'
+      const cmd = (process.platform === 'win32')
         ? `if not exist ${dir} mkdir ${dir} & type NUL > ${dir}\\empty.md`
         : `mkdir -p ${dir} && touch ${dir}/empty.md`
       const m = Metalsmith(fixture('build-noclean'))
       m.clean(false)
-      exec(cmd, function(err){
-        if (err) return done(err)
-        m.build(function(err){
-          if (err) return done(err)
-          equal(fixture('build-noclean/build'), fixture('build-noclean/expected'))
-          done()
-        })
-      })
+
+      try       { await exec(cmd) }
+      catch (e) { throw e }
+
+      await m.build()
+      equal(fixture('build-noclean/build'), fixture('build-noclean/expected'))
     })
 
   })
 })
 
 describe('CLI', function(){
-  const bin = `${process.argv0} ${path.resolve(__dirname, '../bin/metalsmith')}`
+  const bin = `${process.argv0} ${ path.resolve(__dirname, '../bin/metalsmith') }`
 
   describe('build', function(){
-    it('should error without a metalsmith.json', function(done){
-      exec(bin, { cwd: fixture('cli-no-config') }, function(err, stdout){
+    it('should error without a metalsmith.json', async function(){
+      try {
+        await exec(bin, { cwd: fixture('cli-no-config') })
+      }
+      catch (err) {
         assert(err)
         assert(~err.message.indexOf('could not find a metalsmith.json configuration file.'))
-        done()
-      })
+      }
     })
 
-    it('should grab config from metalsmith.json', function(done){
-      exec(bin, { cwd: fixture('cli-json') }, function(err, stdout){
-        if (err) return done(err)
+    it('should grab config from metalsmith.json', async function(){
+      try {
+        const cwd = fixture('cli-json')
+        const env = {'NODE_NO_WARNINGS':false}
+        const {stdout} = await exec(bin, {'cwd':cwd, 'env':env})
         equal(fixture('cli-json/destination'), fixture('cli-json/expected'))
-        assert(~stdout.indexOf('successfully built to '))
-        assert(~stdout.indexOf(fixture('cli-json/destination')))
-        done()
-      })
+        assert(stdout.includes('successfully built to '), `\nSTDOUT WAS: ${stdout}`)
+        assert(stdout.includes(fixture('cli-json/destination')), `\nSTDOUT WAS: ${stdout}`)
+      } catch (err) { throw err }
     })
 
-    it('should grab config from a config.json', function(done){
-      exec(`${bin} -c config.json`, { cwd: fixture('cli-other-config') }, function(err, stdout){
-        if (err) return done(err)
-        equal(fixture('cli-other-config/destination'), fixture('cli-other-config/expected'))
-        assert(~stdout.indexOf('successfully built to '))
-        assert(~stdout.indexOf(fixture('cli-other-config/destination')))
-        done()
-      })
+    it('should grab config from a config.json', async function(){
+      const {stdout} = await exec(`${bin} -c config.json`, { cwd: fixture('cli-other-config') })
+      equal(fixture('cli-other-config/destination'), fixture('cli-other-config/expected'))
+      assert(~stdout.indexOf('successfully built to '))
+      assert(~stdout.indexOf(fixture('cli-other-config/destination')))
     })
 
-    it('should require a plugin', function(done){
-      exec(bin, { cwd: fixture('cli-plugin-object') }, function(err, stdout, stderr){
-        if (err) return done(err)
-        equal(fixture('cli-plugin-object/build'), fixture('cli-plugin-object/expected'))
-        assert(~stdout.indexOf('successfully built to '))
-        assert(~stdout.indexOf(fixture('cli-plugin-object/build')))
-        done()
-      })
+    it('should require a plugin', async function(){
+      const {stdout} = await exec(bin, { cwd: fixture('cli-plugin-object') })
+      equal(fixture('cli-plugin-object/build'), fixture('cli-plugin-object/expected'))
+      assert(~stdout.indexOf('successfully built to '))
+      assert(~stdout.indexOf(fixture('cli-plugin-object/build')))
     })
 
-    it('should require plugins as an array', function(done){
-      exec(bin, { cwd: fixture('cli-plugin-array') }, function(err, stdout){
-        if (err) return done(err)
-        equal(fixture('cli-plugin-array/build'), fixture('cli-plugin-array/expected'))
-        assert(~stdout.indexOf('successfully built to '))
-        assert(~stdout.indexOf(fixture('cli-plugin-array/build')))
-        done()
-      })
+    it('should require plugins as an array', async function(){
+      const {stdout} = await exec(bin, { cwd: fixture('cli-plugin-array') })
+      equal(fixture('cli-plugin-array/build'), fixture('cli-plugin-array/expected'))
+      assert(~stdout.indexOf('successfully built to '))
+      assert(~stdout.indexOf(fixture('cli-plugin-array/build')))
     })
 
-    it('should error when failing to require a plugin', function(done){
-      exec(bin, { cwd: fixture('cli-no-plugin') }, function(err){
+    it('should error when failing to require a plugin', async function(){
+      try {
+        await exec(bin, { cwd: fixture('cli-no-plugin') })
+      }
+      catch (err) {
         assert(err)
         assert(~err.message.indexOf('failed to require plugin "metalsmith-non-existant".'))
-        done()
-      })
+      }
     })
 
-    it('should error when failing to use a plugin', function(done){
-      exec(bin, { cwd: fixture('cli-broken-plugin') }, function(err){
+    it('should error when failing to use a plugin', async function(){
+      try {
+        await exec(bin, { cwd: fixture('cli-broken-plugin') })
+      }
+      catch (err){
         assert(err)
         assert(~err.message.indexOf('error using plugin "./plugin"...'))
         assert(~err.message.indexOf('Break!'))
         assert(~err.message.indexOf('at module.exports'))
-        done()
-      })
+      }
     })
 
-    it('should allow requiring a local plugin', function(done){
-      exec(bin, { cwd: fixture('cli-plugin-local') }, function(err, stdout, stderr){
+    it('should allow requiring a local plugin', async function(){
+      try {
+        const {stdout} = await exec(bin, { cwd: fixture('cli-plugin-local') })
         equal(fixture('cli-plugin-local/build'), fixture('cli-plugin-local/expected'))
         assert(~stdout.indexOf('successfully built to '))
         assert(~stdout.indexOf(fixture('cli-plugin-local/build')))
-        done()
-      })
+      }
+      catch (err) { throw err }
     })
   })
+
 })

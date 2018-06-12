@@ -106,10 +106,9 @@ normalize(json.plugins).forEach(function(plugin){
  * Build.
  */
 
-metalsmith.build(function(err){
-  if (err) return fatal(err.message, err.stack)
-  log(`successfully built to ${metalsmith.destination()}`)
-})
+metalsmith.build()
+  .then(  ()    => { log(`successfully built to ${metalsmith.destination()}`) })
+  .catch( (err) => { fatal(err.message, err.stack) })
 
 /**
  * Log an error and then exit the process.
