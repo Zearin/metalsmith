@@ -10,14 +10,14 @@
   },
   "scripts": {
     "pretest": "npm install",
-    "test": "mocha $HARMONY_OPTS",
+    "test": "npx mocha $HARMONY_OPTS",
     "pretest-debug": "npm install",
-    "test-debug": "mocha debug",
+    "test-debug": "npx mocha debug",
     "precoverage": "npm install",
-    "coverage": "node $HARMONY_OPTS ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha",
+    "coverage": "npx istanbul cover ./node_modules/.bin/mocha",
     "precoveralls": "npm run coverage",
-    "coveralls": "coveralls < coverage/lcov.info",
-    "lint": "./node_modules/.bin/eslint index.js lib/* bin/* test/*.js"
+    "coveralls": "npx coveralls < coverage/lcov.info",
+    "lint": "npx eslint index.js lib/* bin/* test/*.js"
   },
   "dependencies": {
     "chalk": "^1.1.3",
