@@ -5,9 +5,15 @@
     "node": true
   },
   "parserOptions": {
-    "ecmaVersion": 2017
+    "ecmaVersion": 2017,
+    "ecmaFeatures": {
+      "blockBindings": true
+    }
   },
   "rules": {
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-template": "warn",
     "indent": [
       "error",
       2
