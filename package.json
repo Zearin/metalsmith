@@ -45,6 +45,10 @@
     "metalsmith-markdown": "^0.2.2",
     "mocha": "^3.0.2"
   },
+  "engines": {
+    "node": ">=8 <11",
+    "npm": ">=5.2.0"
+  },
   "keywords": [
     "static",
     "file",
