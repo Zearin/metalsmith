@@ -1,14 +1,14 @@
 
-var assert = require('assert')
-var equal = require('assert-dir-equal')
-var exec = require('child_process').exec
-var fs = require('fs')
-var Metalsmith = require('..')
-var Mode = require('stat-mode')
-var noop = function(){}
-var path = require('path')
-var rm = require('rimraf').sync
-var fixture = path.resolve.bind(path, __dirname, 'fixtures')
+const assert = require('assert')
+const equal = require('assert-dir-equal')
+const exec = require('child_process').exec
+const fs = require('fs')
+const Metalsmith = require('..')
+const Mode = require('stat-mode')
+const noop = function(){}
+const path = require('path')
+const rm = require('rimraf').sync
+const fixture = path.resolve.bind(path, __dirname, 'fixtures')
 
 
 /* Use `Buffer.from` whenever possible.
@@ -33,7 +33,7 @@ describe('Metalsmith', function(){
   })
 
   it('should not require the `new` keyword', function(){
-    var m = Metalsmith('test/tmp')
+    const m = Metalsmith('test/tmp')
     assert(m instanceof Metalsmith)
   })
 
@@ -44,23 +44,23 @@ describe('Metalsmith', function(){
   })
 
   it('should use `./src` as a default source directory', function(){
-    var m = Metalsmith('test/tmp')
+    const m = Metalsmith('test/tmp')
     assert.equal(m._source, 'src')
   })
 
   it('should use `./build` as a default destination directory', function(){
-    var m = Metalsmith('test/tmp')
+    const m = Metalsmith('test/tmp')
     assert.equal(m._destination, 'build')
   })
 
   it('should default clean to `true`', function(){
-    var m = Metalsmith('test/tmp')
+    const m = Metalsmith('test/tmp')
     assert.equal(m._clean, true)
   })
 
   describe('#use', function(){
     it('should add a plugin to the plugins stack', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.use(noop)
       assert.equal(m.plugins.length, 1)
     })
@@ -68,7 +68,7 @@ describe('Metalsmith', function(){
 
   describe('#ignore', function(){
     it('should add an ignore file to the internal ignores list', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.ignore('dirfile')
       assert(1 == m.ignores.length)
     })
@@ -76,24 +76,24 @@ describe('Metalsmith', function(){
 
   describe('#directory', function(){
     it('should set a working directory', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.directory('dir')
       assert.equal(m._directory, 'dir')
     })
 
     it('should get the working directory', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert(~m.directory().indexOf(path.sep + path.join('test', 'tmp')))
     })
 
     it('should be able to be absolute', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.directory('/dir')
       assert.equal(m.directory(), path.resolve('/dir'))
     })
 
     it('should error on non-string', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.throws(function(){
         m.directory(0)
       })
@@ -102,24 +102,24 @@ describe('Metalsmith', function(){
 
   describe('#source', function(){
     it('should set a source directory', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.source('dir')
       assert.equal(m._source, 'dir')
     })
 
     it('should get the full path to the source directory', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert(~m.source().indexOf(path.resolve(path.join('test', 'tmp', 'src'))))
     })
 
     it('should be able to be absolute', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.source('/dir')
       assert.equal(m.source(), path.resolve('/dir'))
     })
 
     it('should error on non-string', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.throws(function(){
         m.source(0)
       })
@@ -128,24 +128,24 @@ describe('Metalsmith', function(){
 
   describe('#destination', function(){
     it('should set a destination directory', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.destination('dir')
       assert.equal(m._destination, 'dir')
     })
 
     it('should get the full path to the destination directory', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert(~m.destination().indexOf(path.join('test', 'tmp', 'build')))
     })
 
     it('should be able to be absolute', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.destination('/dir')
       assert.equal(m.destination(), path.resolve('/dir'))
     })
 
     it('should error on non-string', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.throws(function(){
         m.destination(0)
       })
@@ -154,37 +154,37 @@ describe('Metalsmith', function(){
 
   describe('#concurrency', function(){
     it('should set a max number for concurrency', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.concurrency(15)
       assert.equal(m._concurrency, 15)
     })
 
     it('should get the max number for concurrency', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.concurrency(25)
       assert.equal(m.concurrency(), 25)
     })
 
     it('should be infinitely concurrent by default', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.equal(m.concurrency(), Infinity)
     })
   })
 
   describe('#clean', function(){
     it('should set the clean option', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.clean(false)
       assert.equal(m._clean, false)
     })
 
     it('should get the value of the clean option', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.equal(m.clean(), true)
     })
 
     it('should error on non-boolean', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.throws(function(){
         m.clean(0)
       })
@@ -193,18 +193,18 @@ describe('Metalsmith', function(){
 
   describe('#frontmatter', function(){
     it('should set the frontmatter option', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.frontmatter(false)
       assert.equal(m._frontmatter, false)
     })
 
     it('should get the value of the frontmatter option', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert(m.frontmatter(), true)
     })
 
     it('should error on non-boolean', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.throws(function(){
         m.frontmatter(0)
       })
@@ -213,20 +213,20 @@ describe('Metalsmith', function(){
 
   describe('#metadata', function(){
     it('should get metadata', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.deepEqual(m.metadata(), {})
     })
 
     it('should set a clone of metadata', function(){
-      var m = Metalsmith('test/tmp')
-      var data = { property: true }
+      const m = Metalsmith('test/tmp')
+      const data = { property: true }
       m.metadata(data)
       assert.notEqual(m.metadata(), data)
       assert.deepEqual(m.metadata(), data)
     })
 
     it('should error on non-object', function(){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       assert.throws(function(){
         m.metadata(0)
       })
@@ -235,16 +235,16 @@ describe('Metalsmith', function(){
 
   describe('#path', function(){
     it('should return a path relative to the working directory', function(){
-      var m = Metalsmith('test/tmp')
-      var actualPath = m.path('one', 'two', 'three')
+      const m = Metalsmith('test/tmp')
+      const actualPath = m.path('one', 'two', 'three')
       assert(~actualPath.indexOf(path.resolve('test/tmp/one/two/three')))
     })
   })
 
   describe('#read', function(){
     it('should read from a source directory', function(done){
-      var m = Metalsmith(fixture('read'))
-      var stats = fs.statSync(fixture('read/src/index.md'))
+      const m = Metalsmith(fixture('read'))
+      const stats = fs.statSync(fixture('read/src/index.md'))
       m.read(function(err, files){
         if (err) return done(err)
         assert.deepEqual(files, {
@@ -262,8 +262,8 @@ describe('Metalsmith', function(){
     it('should traverse a symbolic link to a directory', function(done){
       // symbolic links are not really a thing on Windows
       if (process.platform === 'win32') { this.skip() }
-      var m = Metalsmith(fixture('read-symbolic-link'))
-      var stats = fs.statSync(fixture('read-symbolic-link/src/dir/index.md'))
+      const m = Metalsmith(fixture('read-symbolic-link'))
+      const stats = fs.statSync(fixture('read-symbolic-link/src/dir/index.md'))
       m.read(function(err, files){
         if (err) return done(err)
         assert.deepEqual(files, {
@@ -279,9 +279,9 @@ describe('Metalsmith', function(){
     })
 
     it('should read from a provided directory', function(done){
-      var m = Metalsmith(fixture('read-dir'))
-      var stats = fs.statSync(fixture('read-dir/dir/index.md'))
-      var dir = fixture('read-dir/dir')
+      const m = Metalsmith(fixture('read-dir'))
+      const stats = fs.statSync(fixture('read-dir/dir/index.md'))
+      const dir = fixture('read-dir/dir')
       m.read(dir, function(err, files){
         if (err) return done(err)
         assert.deepEqual(files, {
@@ -297,8 +297,8 @@ describe('Metalsmith', function(){
     })
 
     it('should preserve an existing file mode', function(done){
-      var m = Metalsmith(fixture('read-mode'))
-      var stats = fs.statSync(fixture('read-mode/src/bin'))
+      const m = Metalsmith(fixture('read-mode'))
+      const stats = fs.statSync(fixture('read-mode/src/bin'))
       m.read(function(err, files){
         if (err) return done(err)
         assert.deepEqual(files, {
@@ -313,16 +313,16 @@ describe('Metalsmith', function(){
     })
 
     it('should expose the stats property in each file metadata', function(done){
-      var m = Metalsmith(fixture('expose-stat'))
+      const m = Metalsmith(fixture('expose-stat'))
       m.read(function(err, files) {
-        var file = files['index.md']
+        const file = files['index.md']
         assert(file.stats instanceof fs.Stats)
         done()
       })
     })
 
     it('should not parse frontmatter if frontmatter is false', function(done){
-      var m = Metalsmith(fixture('read-frontmatter'))
+      const m = Metalsmith(fixture('read-frontmatter'))
       m.frontmatter(false)
       m.read(function(err, files){
         if (err) return done(err)
@@ -332,7 +332,7 @@ describe('Metalsmith', function(){
     })
 
     it('should still read all when concurrency is set', function(done){
-      var m = Metalsmith('test/fixtures/concurrency')
+      const m = Metalsmith('test/fixtures/concurrency')
       m.concurrency(3)
       m.read(function(err, files){
         if (err) return done(err)
@@ -342,8 +342,8 @@ describe('Metalsmith', function(){
     })
 
     it('should ignore the files specified in ignores', function(done){
-      var stats = fs.statSync(path.join(__dirname, 'fixtures/basic/src/index.md'))
-      var m = Metalsmith('test/fixtures/basic')
+      const stats = fs.statSync(path.join(__dirname, 'fixtures/basic/src/index.md'))
+      const m = Metalsmith('test/fixtures/basic')
       m.ignore('nested')
       m.read(function(err, files){
         if (err) return done(err)
@@ -362,8 +362,8 @@ describe('Metalsmith', function(){
 
 
     it('should ignore the files specified in function-based ignores', function(done){
-      var stats = fs.statSync(path.join(__dirname, 'fixtures/basic/src/index.md'))
-      var m = Metalsmith('test/fixtures/basic')
+      const stats = fs.statSync(path.join(__dirname, 'fixtures/basic/src/index.md'))
+      const m = Metalsmith('test/fixtures/basic')
       m.ignore(function(filepath, stats) {
         return stats.isDirectory() && path.basename(filepath) === 'nested'
       })
@@ -385,8 +385,8 @@ describe('Metalsmith', function(){
 
   describe('#write', function(){
     it('should write to a destination directory', function(done){
-      var m = Metalsmith(fixture('write'))
-      var files = { 'index.md': { contents: getBuffer('body') }}
+      const m = Metalsmith(fixture('write'))
+      const files = { 'index.md': { contents: getBuffer('body') }}
       m.write(files, function(err){
         if (err) return done(err)
         equal(fixture('write/build'), fixture('write/expected'))
@@ -395,9 +395,9 @@ describe('Metalsmith', function(){
     })
 
     it('should write to a provided directory', function(done){
-      var m = Metalsmith(fixture('write-dir'))
-      var files = { 'index.md': { contents: getBuffer('body') }}
-      var dir = fixture('write-dir/out')
+      const m = Metalsmith(fixture('write-dir'))
+      const files = { 'index.md': { contents: getBuffer('body') }}
+      const dir = fixture('write-dir/out')
       m.write(files, dir, function(err){
         if (err) return done(err)
         equal(fixture('write-dir/out'), fixture('write-dir/expected'))
@@ -408,8 +408,8 @@ describe('Metalsmith', function(){
     it('should chmod an optional mode from file metadata', function(done){
       // chmod is not really working on windows https://github.com/nodejs/node-v0.x-archive/issues/4812#issue-11211650
       if (process.platform === 'win32') { this.skip() }
-      var m = Metalsmith(fixture('write-mode'))
-      var files = {
+      const m = Metalsmith(fixture('write-mode'))
+      const files = {
         'bin': {
           contents: getBuffer('echo test'),
           mode: '0777'
@@ -417,15 +417,15 @@ describe('Metalsmith', function(){
       }
 
       m.write(files, function(err){
-        var stats = fs.statSync(fixture('write-mode/build/bin'))
-        var mode = Mode(stats).toOctal()
+        const stats = fs.statSync(fixture('write-mode/build/bin'))
+        const mode = Mode(stats).toOctal()
         assert.equal(mode, '0777')
         done()
       })
     })
 
     it('should still write all when concurrency is set', function(done){
-      var m = Metalsmith('test/fixtures/concurrency')
+      const m = Metalsmith('test/fixtures/concurrency')
       m.read(function(err, files){
         if (err) return done(err)
         m.write(files, function(err){
@@ -439,7 +439,7 @@ describe('Metalsmith', function(){
 
   describe('#run', function(){
     it('should apply a plugin', function(done){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.use(plugin)
       m.run({ one: 'one' }, function(err, files, metalsmith){
         assert.equal(files.one, 'one')
@@ -457,7 +457,7 @@ describe('Metalsmith', function(){
     })
 
     it('should run with a provided plugin', function(done){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.run({ one: 'one' }, [plugin], function(err, files, metalsmith){
         assert.equal(files.one, 'one')
         assert.equal(files.two, 'two')
@@ -474,7 +474,7 @@ describe('Metalsmith', function(){
     })
 
     it('should support synchronous plugins', function(done){
-      var m = Metalsmith('test/tmp')
+      const m = Metalsmith('test/tmp')
       m.use(plugin)
       m.run({ one: 'one' }, function(err, files, metalsmith){
         assert.equal(files.one, 'one')
@@ -506,7 +506,7 @@ describe('Metalsmith', function(){
       Metalsmith(fixture('basic-plugin'))
         .use(function(files, metalsmith, done){
           Object.keys(files).forEach(function(file){
-            var data = files[file]
+            const data = files[file]
             data.contents = getBuffer(data.title)
           })
           done()
@@ -551,7 +551,7 @@ describe('Metalsmith', function(){
       Metalsmith(fixture('basic-plugin'))
         .use(function(files, metalsmith, done){
           Object.keys(files).forEach(function(file){
-            var data = files[file]
+            const data = files[file]
             data.contents = getBuffer(data.title)
           })
           done()
@@ -564,7 +564,7 @@ describe('Metalsmith', function(){
     })
 
     it('should remove an existing destination directory', function(done){
-      var m = Metalsmith(fixture('build'))
+      const m = Metalsmith(fixture('build'))
       rm(fixture('build/build'))
       fs.mkdirSync(fixture('build/build'))
       exec('touch test/fixtures/build/build/empty.md', function(err){
@@ -578,11 +578,11 @@ describe('Metalsmith', function(){
     })
 
     it('should not remove existing destination directory if clean is false', function(done){
-      var dir = path.join('test', 'fixtures', 'build-noclean', 'build')
-      var cmd = process.platform === 'win32'
-        ? 'if not exist ' + dir + ' mkdir ' + dir + ' & type NUL > ' + dir + '\\empty.md'
-        : 'mkdir -p ' + dir + ' && touch ' + dir + '/empty.md'
-      var m = Metalsmith(fixture('build-noclean'))
+      const dir = path.join('test', 'fixtures', 'build-noclean', 'build')
+      const cmd = process.platform === 'win32'
+        ? `if not exist ${dir} mkdir ${dir} & type NUL > ${dir}\\empty.md`
+        : `mkdir -p ${dir} && touch ${dir}/empty.md`
+      const m = Metalsmith(fixture('build-noclean'))
       m.clean(false)
       exec(cmd, function(err){
         if (err) return done(err)
@@ -598,7 +598,7 @@ describe('Metalsmith', function(){
 })
 
 describe('CLI', function(){
-  var bin = 'node ' + path.resolve(__dirname, '../bin/metalsmith')
+  const bin = `${process.argv0} ${path.resolve(__dirname, '../bin/metalsmith')}`
 
   describe('build', function(){
     it('should error without a metalsmith.json', function(done){
@@ -620,7 +620,7 @@ describe('CLI', function(){
     })
 
     it('should grab config from a config.json', function(done){
-      exec(bin + ' -c config.json', { cwd: fixture('cli-other-config') }, function(err, stdout){
+      exec(`${bin} -c config.json`, { cwd: fixture('cli-other-config') }, function(err, stdout){
         if (err) return done(err)
         equal(fixture('cli-other-config/destination'), fixture('cli-other-config/expected'))
         assert(~stdout.indexOf('successfully built to '))

@@ -6,11 +6,11 @@
  * Dependencies.
  */
 
-var chalk = require('chalk')
-var exists = require('fs').existsSync
-var Metalsmith = require('..')
-var program = require('commander')
-var resolve = require('path').resolve
+const chalk = require('chalk')
+const exists = require('fs').existsSync
+const Metalsmith = require('..')
+const program = require('commander')
+const resolve = require('path').resolve
 
 /**
  * Usage.
@@ -45,22 +45,23 @@ program.parse(process.argv)
  * Config.
  */
 
-var dir = process.cwd()
-var config = program.config
-var path = resolve(dir, config)
-if (!exists(path)) fatal('could not find a ' + config + ' configuration file.')
+const dir = process.cwd()
+const config = program.config
+const path = resolve(dir, config)
+if (!exists(path)) fatal(`could not find a ${config} configuration file.`)
 
+let json
 try {
-  var json = require(path)
+  json = require(path)
 } catch (e) {
-  fatal('it seems like ' + config + ' is malformed.')
+  fatal(`it seems like ${config} is malformed.`)
 }
 
 /**
  * Metalsmith.
  */
 
-var metalsmith = new Metalsmith(dir)
+const metalsmith = new Metalsmith(dir)
 if (json.source) metalsmith.source(json.source)
 if (json.destination) metalsmith.destination(json.destination)
 if (json.concurrency) metalsmith.concurrency(json.concurrency)
@@ -74,15 +75,15 @@ if (json.ignore != null) metalsmith.ignore(json.ignore)
  */
 
 normalize(json.plugins).forEach(function(plugin){
-  for (var name in plugin) {
-    var opts = plugin[name]
-    var mod
+  for (const name in plugin) {
+    const opts = plugin[name]
+    let mod
 
     try {
-      var local = resolve(dir, name)
-      var npm = resolve(dir, 'node_modules', name)
+      const local = resolve(dir, name)
+      const npm = resolve(dir, 'node_modules', name)
 
-      if (exists(local) || exists(local + '.js')) {
+      if (exists(local) || exists(`${local}.js`)) {
         mod = require(local)
       } else if (exists(npm)) {
         mod = require(npm)
@@ -90,13 +91,13 @@ normalize(json.plugins).forEach(function(plugin){
         mod = require(name)
       }
     } catch (e) {
-      fatal('failed to require plugin "' + name + '".')
+      fatal(`failed to require plugin "${name}".`)
     }
 
     try {
       metalsmith.use(mod(opts))
     } catch (e) {
-      fatal('error using plugin "' + name + '"...', e.message + '\n\n' + e.stack)
+      fatal(`error using plugin "${name}"...${e.message}\n\n`, e.stack)
     }
   }
 })
@@ -107,7 +108,7 @@ normalize(json.plugins).forEach(function(plugin){
 
 metalsmith.build(function(err){
   if (err) return fatal(err.message, err.stack)
-  log('successfully built to ' + metalsmith.destination())
+  log(`successfully built to ${metalsmith.destination()}`)
 })
 
 /**
@@ -119,7 +120,8 @@ metalsmith.build(function(err){
 
 function fatal(msg, stack){
   console.error()
-  console.error(chalk.red('  Metalsmith') + chalk.gray(' · ') + msg)
+  console.error(
+    `${chalk.red('  Metalsmith')}${chalk.gray(' · ')}${msg}`)
   if (stack) {
     console.error()
     console.error(chalk.gray(stack))
@@ -136,7 +138,7 @@ function fatal(msg, stack){
 
 function log(message){
   console.log()
-  console.log(chalk.gray('  Metalsmith · ') + message)
+  console.log(`${chalk.gray('  Metalsmith · ')}${message}`)
   console.log()
 }
 
@@ -149,10 +151,10 @@ function log(message){
 
 function normalize(obj){
   if (obj instanceof Array) return obj
-  var ret = []
+  const ret = []
 
-  for (var key in obj) {
-    var plugin = {}
+  for (const key in obj) {
+    const plugin = {}
     plugin[key] = obj[key]
     ret.push(plugin)
   }
