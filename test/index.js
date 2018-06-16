@@ -62,6 +62,12 @@ describe('Metalsmith', function(){
       m.ignore('dirfile')
       assert(1 == m.ignores.length)
     })
+
+    it('should return the ignore list without arguments', function() {
+      const m = Metalsmith('test/tmp')
+      m.ignore('dirfile')
+      assert(m.ignore()[0] === 'dirfile')
+    })
   })
 
   describe('#directory', function(){
@@ -159,6 +165,18 @@ describe('Metalsmith', function(){
       const m = Metalsmith('test/tmp')
       assert.equal(m.concurrency(), Infinity)
     })
+
+    it('should error on non-number', function() {
+      const m = Metalsmith('test/tmp')
+      const badArgs = [NaN, 'hi', process, false, '1', '2', '3']
+      badArgs.forEach((bad) => {
+        assert.throws(
+          () => { return m.concurrency(bad) },
+          TypeError
+        )
+      })
+    })
+
   })
 
   describe('#clean', function(){
@@ -347,6 +365,38 @@ describe('Metalsmith', function(){
     })
   })
 
+  describe('#readFile', function() {
+
+    it('should read non-absolute files', async function() {
+      const m = Metalsmith(fixture('read'))
+      const stats = fs.statSync(fixture('read/src/index.md'))
+      const expected = {
+        title: 'A Title',
+        contents: Buffer.from('body'),
+        mode: stats.mode.toString(8).slice(-4),
+        stats: stats
+      }
+      const file = await m.readFile('index.md')
+      assert.deepEqual(file, expected)
+    })
+
+    it('should error when reading invalid frontmatter', async function() {
+      const m = Metalsmith(fixture('read-invalid-frontmatter'))
+      m.frontmatter(true)
+      try { 
+        await m.readFile('index.md')
+        throw new Error('This should not execute!')
+      }
+      catch (err) {
+        assert(err instanceof Error)
+        assert.throws(
+          function () { throw err },
+          /invalid frontmatter/i
+        )
+      }
+    })
+  })
+
   describe('#write', function(){
     it('should write to a destination directory', async function(){
       const m = Metalsmith(fixture('write'))
@@ -385,6 +435,24 @@ describe('Metalsmith', function(){
       const files = await m.read()
       await m.write(files)
       equal('test/fixtures/concurrency/build', 'test/fixtures/concurrency/expected')
+    })
+  })
+
+  describe('#writeFile', function() {
+    it('should write non-absolute files', async function() {
+      const m = Metalsmith(fixture('write-file'))
+      const file = 'index.md'
+      const data = { contents: Buffer.from('body') }
+      const expected = fixture('write-file/expected')
+      
+      try       { await m.writeFile(file, data) } 
+      catch (e) { throw e }
+      
+      equal(fixture('write-file/build'), expected)
+      assert.equal(
+        fs.readFileSync(fixture('write-file/build/index.md'),    'utf8'),
+        fs.readFileSync(fixture('write-file/expected/index.md'), 'utf8')
+      )
     })
   })
 
