@@ -8,7 +8,7 @@ const Metalsmith = require('..')
 const Mode = require('stat-mode')
 const noop = function(){}
 const path = require('path')
-const rm = require('rimraf').sync
+const rm = require('fs-extra').remove
 const fixture = path.resolve.bind(path, __dirname, 'fixtures')
 
 
@@ -491,12 +491,17 @@ describe('Metalsmith', function(){
 
     it('should remove an existing destination directory', async function(){
       const m = Metalsmith(fixture('build'))
-      rm(fixture('build/build'))
+      await rm(fixture('build/build'))
       fs.mkdirSync(fixture('build/build'))
+      
       try       { await exec('touch test/fixtures/build/build/empty.md') }
       catch (e) { throw e }
-      await m.build()
-      equal(fixture('build/build'), fixture('build/expected'))
+      
+      try { 
+        await m.build() 
+        equal(fixture('build/build'), fixture('build/expected'))
+      }
+      catch (e) { throw e }
     })
 
     it('should not remove existing destination directory if clean is false', async function(){

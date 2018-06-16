@@ -29,7 +29,6 @@
     "has-generators": "^1.0.1",
     "is-utf8": "~0.2.0",
     "recursive-readdir": "^2.1.0",
-    "rimraf": "^2.2.8",
     "stat-mode": "^0.2.0",
     "ware": "^1.2.0",
     "win-fork": "^1.1.1"
